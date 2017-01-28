@@ -1,3 +1,8 @@
+@font-face {
+    font-family:calculator;
+    src: url("../calculator.ttf") /* TTF file for CSS3 browsers */
+}
+
 .bgvid {
     position: fixed;
     top: 50%;
@@ -8,7 +13,6 @@
     height: auto;
     z-index: -100;
     transform: translateX(-50%) translateY(-50%);
-    background: url('//demosthenes.info/assets/images/polina.jpg') no-repeat;
     background-size: cover;
     transition: 1s opacity;
 }
@@ -19,8 +23,28 @@
     left: 2%;
 }
 
-.objectiveText{
+.objectiveFrame{
     position: fixed;
     top: 20%;
     left: 70%;
+    right: 5%;
+    bottom: 28.2%;
+    background-color: rgba(14, 14, 14, 0.9);
+}
+#objectiveText{
+    color: white;
+    font-size: 33px;
+    padding-left: 5%;
+}
+
+.gameTimer{
+    font-family: calculator;
+    position: fixed;
+    top:84%;
+    left: 56%;
+    background-color: rgba(14, 14, 14, 0.9);
+    padding-left: 104px;
+    padding-right: 104px;
+    padding-bottom: 27px;
+    padding-top: 27px;
 }
