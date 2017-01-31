@@ -23,6 +23,8 @@
     left: 2%;
 }
 
+
+
 .objectiveFrame{
     position: fixed;
     top: 20%;
@@ -31,10 +33,20 @@
     bottom: 28.2%;
     background-color: rgba(14, 14, 14, 0.9);
 }
+
+#starImg{
+    position: fixed;
+}
+
 #objectiveText{
     color: white;
     font-size: 33px;
     padding-left: 5%;
+}
+#countdown{
+    color:#ff0000;
+    font-size: 78px;
+
 }
 
 .gameTimer{
@@ -47,4 +59,5 @@
     padding-right: 104px;
     padding-bottom: 27px;
     padding-top: 27px;
+
 }
