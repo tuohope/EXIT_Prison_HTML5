@@ -5,6 +5,11 @@ var gameTime = 45 * 60;
 var hintTime = 5 * 60;
 var debug = true;
 
+var gameInProgress = false;
+
+var videoQueue = [];
+var isPlaying = false;
+
 var cellOpened = false;
 var leverPulled = false;
 var fusePulled = false;
@@ -20,17 +25,15 @@ var cubaPressed = false;
 var koreaPressed = false;
 var russiaPressed = false;
 
-var bonus3Solved = false;
+var turretActive = true;
+var laserActive = true;
+var fDoorLocked = true;
+var laserTripped = false;
 
 var bonus1Active = false;
 var bonus2Active = false;
 var bonus3Active = false;
 var bonus4Active = false;
-
-var turretActive = true;
-var laserActive = true;
-var fDoorLocked = true;
-var laserTripped = false;
 
 
 var isIntro = false;
@@ -43,25 +46,81 @@ var currentObjective = "";
 
 
 //send
-$("button").click(function () {
-    socket.emit('buttonPress');
-})
+// $("button").click(function () {
+//     socket.emit('buttonPress');
+// })
 
 
-// $(".objectiveFrame").hide();
-// $(".gameTimer").hide();
+$(".objectiveFrame").hide();
+$(".gameTimer").hide();
 
 //receive
+socket.on("gameUserConnected", function (data) {
+    console.log(data);
+    console.log(data.gameInProgress)
+
+    if (data.gameInProgress){
+            $(".objectiveFrame").show();
+            $(".gameTimer").show();
+
+            gameInProgress =  data.gameInProgress;
+
+            gameTime = data.gameTime;
+            hintTime = data.hintTime;
+
+            cellOpened =  data.cellOpened;
+            leverPulled =  data.leverPulled;
+            fusePulled =  data.fusePulled;
+            guardTraped =  data.guardTraped;
+            sndDoorClosed =  data.sndDoorClosed;
+
+            pillTaken =  data.pillTaken;
+            uniformTaken =  data.uniformTaken;
+
+            guardDrugged =  data.guardDrugged;
+
+            cubaPressed =  data.cubaPressed;
+            koreaPressed =  data.koreaPressed;
+            russiaPressed =  data.russiaPressed;
+
+            turretActive =  data.turretActive;
+            laserActive =  data.laserActive;
+            fDoorLocked =  data.fDoorLocked;
+            laserTripped =  data.laserTripped;
+
+            bonus1Active =  data.bonus1Active;
+            bonus2Active =  data.bonus2Active;
+            bonus3Active =  data.bonus3Active;
+            bonus4Active =  data.bonus4Active;
+
+            currStar =  data.currStar;
+            currRoom =  data.currRoom;
+            currStage =  data.currStage;
+
+            currentObjective =  data.currentObjective;
+
+            changeObjectiveText(currentObjective);
+            GameTimeCountDown();
+            HintTimeCountDown();
+    }
+
+
+});
+
+
 socket.on('gameStart', function (msg) {
-    if (currRoom != 0){return;}
+    if (currRoom != 0) {
+        return;
+    }
 
     isIntro = true;
-    if (debug){
+    if (debug) {
         console.log(msg);
         playVideo("e1");
-    }else {
+    } else {
         playVideo("intro");
     }
+    gameInProgress = true;
 
 
     currRoom = 1;
@@ -75,7 +134,6 @@ socket.on('gameStart', function (msg) {
     bonus3Active = false;
     bonus4Active = false;
 
-    bonus3Solved = false;
 
     turretActive = true;
     laserActive = true;
@@ -87,7 +145,10 @@ socket.on('gameStart', function (msg) {
 
 socket.on('guardTrapped', function (msg) {
     printDebugMsg(msg);
-    if (guardTraped) {return;}
+    if (!gameInProgress){return;}
+    if (guardTraped) {
+        return;
+    }
     stopHintTimer();
 
     guardTraped = true;
@@ -104,7 +165,10 @@ socket.on('guardTrapped', function (msg) {
 
 socket.on('guardDrugged', function (msg) {
     printDebugMsg(msg);
-    if (guardDrugged){return;}
+    if (!gameInProgress){return;}
+    if (guardDrugged) {
+        return;
+    }
 
     stopHintTimer();
     guardDrugged = true;
@@ -117,22 +181,25 @@ socket.on('guardDrugged', function (msg) {
 });
 
 socket.on('resetGame', function (msg) {
-    if (debug){
+    if (debug) {
         console.log(msg);
     }
     //todo
 });
 
-socket.on('emerBtn', function(msg){
-    if (debug){
+socket.on('emerBtn', function (msg) {
+    if (debug) {
         console.log(msg);
     }
     //todo
 });
 
-socket.on('cellOpen', function(msg){
+socket.on('cellOpen', function (msg) {
     printDebugMsg(msg);
-    if (cellOpened){return;}
+    if (!gameInProgress){return;}
+    if (cellOpened) {
+        return;
+    }
     stopHintTimer();
     cellOpened = true;
 
@@ -143,9 +210,12 @@ socket.on('cellOpen', function(msg){
     startHintTimer()
 });
 
-socket.on('leverPulled', function(msg){
+socket.on('leverPulled', function (msg) {
     printDebugMsg(msg);
-    if (leverPulled){return;}
+    if (!gameInProgress){return;}
+    if (leverPulled) {
+        return;
+    }
     stopHintTimer();
     leverPulled = true;
 
@@ -154,7 +224,7 @@ socket.on('leverPulled', function(msg){
     currStage = 3;
     currentObjective = "Find a way to take the guard out of commission."
 
-    if (gameTime >= 40*60){
+    if (gameTime >= 40 * 60) {
         bonus1Active = true;
         playVideo("b1");
     }
@@ -162,9 +232,13 @@ socket.on('leverPulled', function(msg){
     startHintTimer();
 });
 
-socket.on('fusePulled', function(msg){
+socket.on('fusePulled', function (msg) {
     printDebugMsg(msg);
-    if (fusePulled){return;}
+    if (!gameInProgress){return;}
+    playSound("powerOut");
+    if (fusePulled) {
+        return;
+    }
     stopHintTimer();
     fusePulled = true;
 
@@ -175,9 +249,12 @@ socket.on('fusePulled', function(msg){
     playVideo("c1");
 });
 
-socket.on('2ndDoor', function(msg){
+socket.on('2ndDoor', function (msg) {
     printDebugMsg(msg);
-    if (sndDoorClosed){return;}
+    if (!gameInProgress){return;}
+    if (sndDoorClosed) {
+        return;
+    }
     stopHintTimer();
 
     currRoom = 1;
@@ -187,9 +264,10 @@ socket.on('2ndDoor', function(msg){
     playVideo("f3");
 });
 
-socket.on('cubaPressed', function(msg){
+socket.on('cubaPressed', function (msg) {
     printDebugMsg(msg);
-    if (!cubaPressed && !koreaPressed && !russiaPressed){
+    if (!gameInProgress){return;}
+    if (!cubaPressed && !koreaPressed && !russiaPressed) {
         cubaPressed = true;
         return;
     }
@@ -199,9 +277,10 @@ socket.on('cubaPressed', function(msg){
     russiaPressed = false;
 });
 
-socket.on('korea', function(msg){
+socket.on('korea', function (msg) {
     printDebugMsg(msg);
-    if (cubaPressed && !russiaPressed){
+    if (!gameInProgress){return;}
+    if (cubaPressed && !russiaPressed) {
         koreaPressed = true;
         return;
     }
@@ -210,9 +289,10 @@ socket.on('korea', function(msg){
     russiaPressed = false;
 });
 
-socket.on('russia', function(msg){
+socket.on('russia', function (msg) {
     printDebugMsg(msg);
-    if (cubaPressed && koreaPressed){
+    if (!gameInProgress){return;}
+    if (cubaPressed && koreaPressed) {
         russiaPressed = true;
         bonus1Active = false;
         changeObjectiveText(currentObjective);
@@ -226,8 +306,9 @@ socket.on('russia', function(msg){
     russiaPressed = false;
 });
 
-socket.on('pillTaken', function(msg){
+socket.on('pillTaken', function (msg) {
     printDebugMsg(msg);
+    if (!gameInProgress){return;}
     if (pillTaken){return;}
 
     pillTaken = true;
@@ -238,12 +319,12 @@ socket.on('pillTaken', function(msg){
     currStage = 1;
 
 
-    if (pillTaken && uniformTaken){
+    if (pillTaken && uniformTaken) {
         currRoom = 3;
         currStage = 1;
         currentObjective = "Find a way to use the sleeping pills on the guard.\nUse the guard disguise to get into the third room.";
         startHintTimer();
-    }else{
+    } else {
         currentObjective = "Find a way to use the sleeping pills on the guard."
     }
     changeObjectiveText(currentObjective);
@@ -252,8 +333,9 @@ socket.on('pillTaken', function(msg){
 
 });
 
-socket.on('uniformTaken', function(msg){
+socket.on('uniformTaken', function (msg) {
     printDebugMsg(msg);
+    if (!gameInProgress){return;}
     if (uniformTaken){return;}
     stopHintTimer();
 
@@ -265,21 +347,24 @@ socket.on('uniformTaken', function(msg){
     currStage = 1;
 
 
-    if (pillTaken && uniformTaken){
+    if (pillTaken && uniformTaken) {
         currRoom = 3;
         currStage = 1;
         currentObjective = "Find a way to use the sleeping pills on the guard.\nUse the guard disguise to get into the third room.";
         startHintTimer();
-    }else{
+    } else {
         currentObjective = "Use the guard disguise to get into the third room."
     }
     changeObjectiveText(currentObjective);
     playVideo("c2");
 });
 
-socket.on('wardenlockerOpened', function(msg){
+socket.on('wardenlockerOpened', function (msg) {
     printDebugMsg(msg);
-    if (!bonus3Active){return;}
+    if (!gameInProgress){return;}
+    if (!bonus3Active) {
+        return;
+    }
 
     bonus3Active = false;
     changeObjectiveText(currentObjective);
@@ -287,9 +372,12 @@ socket.on('wardenlockerOpened', function(msg){
     playVideo("b4");
 });
 
-socket.on('phoneCracked', function(msg){
+socket.on('phoneCracked', function (msg) {
     printDebugMsg(msg);
-    if (!bonus2Active){return;}
+    if (!gameInProgress){return;}
+    if (!bonus2Active) {
+        return;
+    }
 
     bonus2Active = false;
     changeObjectiveText(currentObjective);
@@ -297,8 +385,9 @@ socket.on('phoneCracked', function(msg){
     playVideo("b3");
 });
 
-socket.on('pcUnlocked', function(msg){
+socket.on('pcUnlocked', function (msg) {
     printDebugMsg(msg);
+    if (!gameInProgress){return;}
     stopHintTimer();
 
     currRoom = 3;
@@ -310,56 +399,85 @@ socket.on('pcUnlocked', function(msg){
 
 });
 
-socket.on('turretDisabled', function(msg){
+socket.on('turretDisabled', function (msg) {
     printDebugMsg(msg);
+    if (!gameInProgress){return;}
 
     turretActive = false;
 
 });
 
-socket.on('laserDisabled', function(msg){
+socket.on('laserDisabled', function (msg) {
     printDebugMsg(msg);
+    if (!gameInProgress){return;}
 
     laserActive = false;
 
 });
 
-socket.on('fDoorUnlock', function(msg){
+socket.on('fDoorUnlock', function (msg) {
     printDebugMsg(msg);
+    if (!gameInProgress){return;}
 
     fDoorLocked = false;
 
 });
 
-socket.on('laserTripUnalarmed', function(msg){
+socket.on('laserTripUnalarmed', function (msg) {
     printDebugMsg(msg);
+    if (!gameInProgress){return;}
     if (laserTripped) {
         laserTripped = false;
         changeObjectiveText(currentObjective);
-        playVideo("c6");
+        // playVideo("c6");
+
+        isPlaying = true;
+        $('#gv').show();
+        var video = document.getElementById('gv');
+        var sources = video.getElementsByTagName('source');
+        sources[0].src = "video/c6.mp4";
+        video.load();
+        video.play();
+
     }
 
 });
 
-socket.on('laserTripped', function(msg){
+socket.on('laserTripped', function (msg) {
     printDebugMsg(msg);
+    if (!gameInProgress){return;}
+    console.log(currRoom);
     if (currRoom != 3 || !laserActive){return;}
+    if (laserTripped){return;}
     laserTripped = true;
 
     $("#objectiveText").text("Press PageUp, PageDown, Home, and End on the keyboard to shut down the alarm.");
-    playVideo("f7");
+    // playVideo("f7");
+
+    isPlaying = true;
+    $('#gv').show();
+    var video = document.getElementById('gv');
+    var sources = video.getElementsByTagName('source');
+    sources[0].src = "video/f7.mp4";
+    video.load();
+    video.play();
+
 });
 
-socket.on('fDoorOpened', function(msg){
+socket.on('fDoorOpened', function (msg) {
     printDebugMsg(msg);
+    if (!gameInProgress){return;}
     //todo
 
-    if (!laserActive && !fDoorLocked){
+    if (!laserActive && !fDoorLocked) {
         incStar();
-        if (turretActive){
+        gameInProgress = false;
+        if (turretActive) {
+            playSound("heliDown");
             playVideo("e2");
-        }else {
+        } else {
             incStar();
+            playSound("heliUp");
             playVideo("e1");
         }
 
@@ -374,22 +492,54 @@ socket.on('fDoorOpened', function(msg){
 
 //helper
 function incStar() {
+    currStar++;
+
+    switch (currStar){
+        case 1:
+            $('#starImg').attr("src","/images/s1.png");
+            break;
+        case 2:
+            $('#starImg').attr("src","/images/s2.png");
+            break;
+        case 3:
+            $('#starImg').attr("src","/images/s3.png");
+            break;
+        case 4:
+            $('#starImg').attr("src","/images/s4.png");
+            break;
+        case 5:
+            $('#starImg').attr("src","/images/s5.png");
+            break;
+        default:
+            break;
+    }
 
 }
 
+function playSound(fileName) {
+    var audio = new Audio("/SFX/"+ fileName +".mp3");
+    audio.play();
+}
+
 function playVideo(fileName) {
-    $('#gv').show();
-    var video = document.getElementById('gv');
-    var sources = video.getElementsByTagName('source');
-    sources[0].src = "video/"+fileName+".mp4";
-    video.load();
-    video.play();
+    if (isPlaying){
+        videoQueue.push(fileName);
+    } else{
+        isPlaying = true;
+        $('#gv').show();
+        var video = document.getElementById('gv');
+        var sources = video.getElementsByTagName('source');
+        sources[0].src = "video/"+fileName+".mp4";
+        video.load();
+        video.play();
+    }
 }
 
 document.getElementById('gv').addEventListener('ended',videoEndHandler,false);
 
 function videoEndHandler(e) {
     $('#gv').hide();
+    isPlaying = false;
 
     if (isIntro){
         $(".objectiveFrame").show();
@@ -397,6 +547,9 @@ function videoEndHandler(e) {
         GameTimeCountDown();
     }
 
+    if (videoQueue.length != 0){
+        playVideo(videoQueue.shift());
+    }
 }
 
 function changeObjectiveText(currentObjective){
@@ -483,10 +636,12 @@ function GameTimeCountDown() {
     var minutes = Math.floor(gameTime / 60);
     var seconds = gameTime % 60;
 
-    if (gameTime > 0){
+    if (gameTime > 0 && gameInProgress){
         gameTime--;
         setTimeout(GameTimeCountDown,1000);
     }
+
+    socket.emit('gameCountDown',GenerateGameStatus());
 
     var minText = minutes >= 10 ? minutes : "0" + minutes;
     var secText = seconds >= 10 ? seconds : "0" + seconds;
@@ -494,6 +649,46 @@ function GameTimeCountDown() {
     ctd.innerHTML = '<span>' + minText + ":" + secText + '</span>';
 }
 
+
+function GenerateGameStatus() {
+    return {
+        gameInProgress : gameInProgress,
+
+        gameTime : gameTime,
+        hintTime : hintTime,
+
+        cellOpened : cellOpened,
+        leverPulled : leverPulled,
+        fusePulled : fusePulled,
+        guardTraped : guardTraped,
+        sndDoorClosed : sndDoorClosed,
+
+        pillTaken : pillTaken,
+        uniformTaken : uniformTaken,
+
+        guardDrugged : guardDrugged,
+
+        cubaPressed : cubaPressed,
+        koreaPressed : koreaPressed,
+        russiaPressed : russiaPressed,
+
+        turretActive : turretActive,
+        laserActive : laserActive,
+        fDoorLocked : fDoorLocked,
+        laserTripped : laserTripped,
+
+        bonus1Active : bonus1Active,
+        bonus2Active : bonus2Active,
+        bonus3Active : bonus3Active,
+        bonus4Active : bonus4Active,
+
+        currStar : currStar,
+        currRoom : currRoom,
+        currStage : currStage,
+
+        currentObjective : currentObjective
+    }
+}
 
 function printDebugMsg(msg) {
     if (debug){
