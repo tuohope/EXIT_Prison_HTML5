@@ -110,7 +110,9 @@ myBoard.on("ready", function () {
 
 
     emerBtn.on("down",function(){
-        io.emit("emerBtn","emerBtn");
+        // io.emit("emerBtn","emerBtn");
+        io.emit("test","test");
+
         console.log("emerBtn on");
     });
     emerBtn.on("up",function(){
@@ -124,30 +126,8 @@ myBoard.on("ready", function () {
     });
 
     remoteA.on("down",function(){
-        if (!gameInProgress){
-            gameInProgress = true;
-            resetGameStatus();
-            resetHintTime();
-
-            currGameTime += 11;
-            currHintTime += 11;
-
-            startHintTime();
-            startGameTime();
-
-
-            currStep = 1;
-            // io.emit("gameStart", GenerativeObjectiveText());
-
-            io.emit("gameStart", {
-                text : GenerativeObjectiveText(),
-                video : "e1",
-                gameTime : gameTime
-            })
-
-        }
+        startGame();
         console.log("remoteA on");
-
     });
 
 
@@ -526,6 +506,31 @@ io.on('connection', function (socket) {
     }
 
 })
+
+
+function startGame() {
+    if (!gameInProgress){
+        gameInProgress = true;
+        resetGameStatus();
+        resetHintTime();
+
+        currGameTime += 11;
+        currHintTime += 11;
+
+        startHintTime();
+        startGameTime();
+
+
+        currStep = 1;
+
+        io.emit("gameStart", {
+            text : GenerativeObjectiveText(),
+            video : "e1",
+            gameTime : gameTime
+        })
+
+    }
+}
 
 /**
  * @return {string}

@@ -1,4 +1,4 @@
-var socket = io();
+var socket = io.connect("192.168.0.19:3000");
 var gameTime = 0;
 var isIntro = false;
 var isEnding = false;
@@ -9,6 +9,11 @@ var videoQueue = [];
 
 $(".objectiveFrame").hide();
 $(".gameTimer").hide();
+
+socket.on("test",function (data) {
+    console.log(data);
+    // console.log(msg);
+})
 
 socket.on("hintTriggered", function (msg) {
     // console.log(msg);
